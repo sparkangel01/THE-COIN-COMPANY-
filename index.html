@@ -1,0 +1,670 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Liquid Bank · Expandable Cards</title>
+  <!-- Font Awesome for Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0-beta3/css/all.min.css">
+  <style>
+    /* ----- RESET & GLOBAL ----- */
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif;
+    }
+
+    body {
+      min-height: 100vh;
+      background: radial-gradient(circle at 20% 30%, #d0e4ff, #b0c8f0);
+      background-attachment: fixed;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      padding: 2rem 1rem;
+      position: relative;
+      overflow-x: hidden;
+    }
+
+    /* liquid floating bubbles (background) */
+    .bubble {
+      position: fixed;
+      border-radius: 50%;
+      background: rgba(255, 255, 255, 0.25);
+      box-shadow: 0 0 40px rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(4px);
+      pointer-events: none;
+      z-index: 0;
+      animation: float 18s infinite alternate ease-in-out;
+    }
+
+    .b1 { width: 280px; height: 280px; top: -80px; left: -60px; }
+    .b2 { width: 400px; height: 400px; bottom: -120px; right: -80px; background: rgba(210, 230, 255, 0.4); animation-duration: 22s; }
+    .b3 { width: 180px; height: 180px; top: 40%; right: 10%; background: rgba(255, 255, 255, 0.35); animation-duration: 14s; }
+    .b4 { width: 220px; height: 220px; bottom: 10%; left: 5%; background: rgba(200, 220, 255, 0.45); animation-duration: 20s; }
+
+    @keyframes float {
+      0% { transform: translate(0, 0) scale(1); }
+      100% { transform: translate(30px, -30px) scale(1.05); }
+    }
+
+    /* main glass container */
+    .bank-container {
+      width: 100%;
+      max-width: 800px;
+      z-index: 10;
+      position: relative;
+    }
+
+    .bank-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.8rem 1.6rem;
+      margin-bottom: 1.8rem;
+      background: rgba(255, 255, 255, 0.3);
+      backdrop-filter: blur(14px);
+      border-radius: 80px;
+      border: 1px solid rgba(255, 255, 255, 0.6);
+      box-shadow: 0 10px 30px rgba(0, 30, 60, 0.1), inset 0 1px 4px rgba(255, 255, 255, 0.8);
+    }
+
+    .bank-header h1 {
+      font-size: 1.5rem;
+      font-weight: 500;
+      color: #1e3e6e;
+      letter-spacing: -0.3px;
+      display: flex;
+      align-items: center;
+      gap: 0.6rem;
+    }
+
+    .bank-header h1 i {
+      color: #2b5b9e;
+      font-size: 1.7rem;
+    }
+
+    .liquid-badge {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(5px);
+      padding: 0.4rem 1rem;
+      border-radius: 40px;
+      color: #1e3e6e;
+      font-weight: 500;
+      font-size: 0.9rem;
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      box-shadow: 0 2px 6px rgba(0,0,0,0.02);
+    }
+
+    /* ----- CARD STYLES (liquid glass) ----- */
+    .card {
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(16px);
+      border-radius: 28px;
+      border: 1px solid rgba(255, 255, 255, 0.7);
+      box-shadow: 0 20px 40px -10px rgba(0, 20, 50, 0.2), inset 0 1px 4px rgba(255, 255, 255, 0.9);
+      margin-bottom: 1.2rem;
+      transition: all 0.4s cubic-bezier(0.2, 0.9, 0.4, 1);
+      overflow: hidden;
+      cursor: pointer;
+      position: relative;
+      /* liquid sheen */
+      background-image: radial-gradient(circle at 30% 20%, rgba(255,255,255,0.8) 0%, transparent 50%);
+    }
+
+    .card:hover {
+      background: rgba(255, 255, 255, 0.5);
+      box-shadow: 0 22px 45px -8px rgba(0, 30, 70, 0.25), inset 0 1px 6px white;
+      transform: scale(1.01);
+    }
+
+    /* expanded state */
+    .card.expanded {
+      background: rgba(255, 255, 255, 0.6);
+      backdrop-filter: blur(22px);
+      box-shadow: 0 30px 50px -12px rgba(0, 20, 60, 0.3), inset 0 1px 8px white;
+      border-color: rgba(255, 255, 255, 0.95);
+      cursor: default;
+      transform: scale(1.02);
+    }
+
+    /* card header (always visible) */
+    .card-header {
+      padding: 1.4rem 1.8rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      user-select: none;
+    }
+
+    .card-header h2 {
+      font-size: 1.35rem;
+      font-weight: 500;
+      color: #1e3e6e;
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      letter-spacing: -0.2px;
+    }
+
+    .card-header h2 i {
+      font-size: 1.6rem;
+      color: #2b5b9e;
+      width: 2rem;
+      text-align: center;
+    }
+
+    .card-header .amount {
+      font-weight: 600;
+      font-size: 1.45rem;
+      color: #1b3b66;
+      background: rgba(255, 255, 255, 0.5);
+      padding: 0.2rem 0.9rem;
+      border-radius: 40px;
+      border: 1px solid rgba(255, 255, 255, 0.8);
+    }
+
+    .expand-icon {
+      color: #2b5b9e;
+      font-size: 1.3rem;
+      transition: transform 0.4s ease;
+      margin-left: 0.6rem;
+    }
+
+    .card.expanded .expand-icon {
+      transform: rotate(180deg);
+    }
+
+    /* card body (hidden by default, expands) */
+    .card-body {
+      max-height: 0;
+      opacity: 0;
+      padding: 0 1.8rem;
+      transition: max-height 0.5s cubic-bezier(0.2, 0.9, 0.4, 1), opacity 0.4s ease, padding 0.3s ease;
+      overflow: hidden;
+      border-top: 1px solid rgba(255, 255, 255, 0.0);
+    }
+
+    .card.expanded .card-body {
+      max-height: 600px;      /* enough for form */
+      opacity: 1;
+      padding: 0 1.8rem 1.8rem 1.8rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.6);
+    }
+
+    /* ----- FORM & FIELDS (liquid style) ----- */
+    .bio-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      margin-top: 1.2rem;
+    }
+
+    .input-group {
+      display: flex;
+      flex-direction: column;
+      gap: 0.3rem;
+    }
+
+    .input-group label {
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: #1e3e6e;
+      letter-spacing: 0.3px;
+      margin-left: 0.4rem;
+      opacity: 0.9;
+    }
+
+    .input-group input {
+      background: rgba(255, 255, 255, 0.7);
+      backdrop-filter: blur(5px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 50px;
+      padding: 0.9rem 1.2rem;
+      font-size: 0.95rem;
+      color: #0e2a4a;
+      outline: none;
+      transition: all 0.2s ease;
+      box-shadow: inset 0 2px 6px rgba(0,0,0,0.02), 0 2px 4px rgba(255,255,255,0.5);
+    }
+
+    .input-group input:focus {
+      border-color: #2b5b9e;
+      background: rgba(255, 255, 255, 0.95);
+      box-shadow: 0 0 0 4px rgba(43, 91, 158, 0.15), inset 0 2px 4px rgba(0,0,0,0.02);
+    }
+
+    .input-group input::placeholder {
+      color: #5d7ea0;
+      font-weight: 300;
+      font-size: 0.9rem;
+    }
+
+    /* checkbox "liquid" style */
+    .checkbox-group {
+      display: flex;
+      align-items: center;
+      gap: 0.8rem;
+      background: rgba(255, 255, 255, 0.5);
+      backdrop-filter: blur(6px);
+      border: 1px solid rgba(255, 255, 255, 0.9);
+      border-radius: 50px;
+      padding: 0.9rem 1.4rem;
+      margin: 0.5rem 0 0.2rem;
+      transition: all 0.2s;
+      cursor: pointer;
+      box-shadow: inset 0 1px 3px rgba(255,255,255,0.8);
+    }
+
+    .checkbox-group:hover {
+      background: rgba(255, 255, 255, 0.7);
+    }
+
+    .checkbox-group input[type="checkbox"] {
+      appearance: none;
+      -webkit-appearance: none;
+      width: 1.5rem;
+      height: 1.5rem;
+      background: rgba(255, 255, 255, 0.8);
+      border: 1.5px solid #2b5b9e;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all 0.2s;
+      box-shadow: inset 0 1px 3px rgba(0,0,0,0.05);
+      flex-shrink: 0;
+    }
+
+    .checkbox-group input[type="checkbox"]:checked {
+      background: #2b5b9e;
+      border-color: #2b5b9e;
+      box-shadow: 0 0 0 3px rgba(43, 91, 158, 0.2);
+    }
+
+    .checkbox-group input[type="checkbox"]:checked::after {
+      content: "\f00c";
+      font-family: "Font Awesome 6 Free";
+      font-weight: 900;
+      font-size: 0.9rem;
+      color: white;
+    }
+
+    .checkbox-group label {
+      font-size: 1rem;
+      color: #1a3454;
+      font-weight: 500;
+      cursor: pointer;
+      flex: 1;
+      letter-spacing: -0.2px;
+    }
+
+    .checkbox-group label i {
+      color: #2b5b9e;
+      margin-right: 0.3rem;
+    }
+
+    /* action button */
+    .pay-btn {
+      margin-top: 1.4rem;
+      background: linear-gradient(135deg, #ffffff, #e6f0ff);
+      border: 1px solid rgba(255, 255, 255, 1);
+      border-radius: 50px;
+      padding: 1rem 1.8rem;
+      font-weight: 600;
+      font-size: 1.1rem;
+      color: #1e3e6e;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.8rem;
+      cursor: pointer;
+      transition: all 0.25s ease;
+      box-shadow: 0 10px 20px -8px rgba(0, 40, 80, 0.3), inset 0 1px 4px white;
+      backdrop-filter: blur(10px);
+      letter-spacing: 0.3px;
+    }
+
+    .pay-btn i {
+      color: #2b5b9e;
+      font-size: 1.2rem;
+    }
+
+    .pay-btn:hover {
+      background: linear-gradient(135deg, #ffffff, #d6e6ff);
+      box-shadow: 0 16px 26px -10px rgba(0, 40, 90, 0.4), inset 0 2px 8px white;
+      transform: translateY(-2px);
+    }
+
+    .pay-btn:active {
+      transform: translateY(1px);
+      box-shadow: 0 8px 16px -8px rgba(0, 40, 80, 0.3), inset 0 1px 4px white;
+    }
+
+    /* micro interaction for card footer / success */
+    .card-footer {
+      display: flex;
+      justify-content: flex-end;
+      margin-top: 0.8rem;
+      font-size: 0.85rem;
+      color: #2b5b9e;
+      font-weight: 500;
+      opacity: 0.9;
+    }
+
+    .card-footer i {
+      margin-right: 0.3rem;
+    }
+
+    /* small note */
+    .legal-note {
+      text-align: center;
+      margin-top: 2rem;
+      font-size: 0.8rem;
+      color: #315f8a;
+      background: rgba(255, 255, 255, 0.35);
+      backdrop-filter: blur(8px);
+      padding: 0.6rem 1.4rem;
+      border-radius: 60px;
+      border: 1px solid rgba(255, 255, 255, 0.5);
+      width: fit-content;
+      margin-left: auto;
+      margin-right: auto;
+      letter-spacing: 0.2px;
+    }
+
+    .legal-note i {
+      margin-right: 0.3rem;
+      color: #1e3e6e;
+    }
+
+    /* responsive */
+    @media (max-width: 480px) {
+      .card-header {
+        padding: 1.2rem 1.2rem;
+      }
+      .card-header h2 {
+        font-size: 1.1rem;
+      }
+      .card-header .amount {
+        font-size: 1.2rem;
+      }
+      .card-body {
+        padding: 0 1.2rem 1.4rem 1.2rem;
+      }
+      .bank-header h1 {
+        font-size: 1.2rem;
+      }
+    }
+  </style>
+</head>
+<body>
+  <!-- floating liquid bubbles -->
+  <div class="bubble b1"></div>
+  <div class="bubble b2"></div>
+  <div class="bubble b3"></div>
+  <div class="bubble b4"></div>
+
+  <div class="bank-container">
+    <!-- liquid bank header -->
+    <div class="bank-header">
+      <h1>
+        <i class="fas fa-water"></i> LiquidBank
+      </h1>
+      <span class="liquid-badge"><i class="fas fa-shield-alt"></i> trust flow</span>
+    </div>
+
+    <!-- ========== CARD 1: BIODATA FORM + COINS + CERTIFICATE PAYMENT ========== -->
+    <div class="card" id="card1">
+      <div class="card-header">
+        <h2>
+          <i class="fas fa-id-card"></i> Bio Data & Payment
+        </h2>
+        <div style="display: flex; align-items: center;">
+          <span class="amount">$ 0.00</span>
+          <i class="fas fa-chevron-down expand-icon"></i>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- bio data form -->
+        <form class="bio-form" id="bioForm">
+          <div class="input-group">
+            <label><i class="fas fa-user"></i> Full Name</label>
+            <input type="text" placeholder="e.g. James Clearwater" id="fullName" autocomplete="off">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-map-pin"></i> Address</label>
+            <input type="text" placeholder="123 Liquid Ave, Flow City" id="address" autocomplete="off">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-coins"></i> Amount of Coins</label>
+            <input type="number" placeholder="0.00" id="coins" step="any" min="0" value="0">
+          </div>
+        </form>
+
+        <!-- certificate agreement checkbox -->
+        <div class="checkbox-group" id="agreeBox">
+          <input type="checkbox" id="agreeCheck">
+          <label for="agreeCheck">
+            <i class="fas fa-certificate"></i> I agree to make payment for certificate
+          </label>
+        </div>
+
+        <!-- payment button -->
+        <button class="pay-btn" id="payButton">
+          <i class="fas fa-hand-holding-usd"></i> Pay & Generate Certificate
+        </button>
+
+        <div class="card-footer">
+          <i class="fas fa-lock"></i> secured by liquid encryption
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== CARD 2: SECOND TRANSACTION (different) ========== -->
+    <div class="card" id="card2">
+      <div class="card-header">
+        <h2>
+          <i class="fas fa-exchange-alt"></i> Transfer Flow
+        </h2>
+        <div style="display: flex; align-items: center;">
+          <span class="amount">$ 124.50</span>
+          <i class="fas fa-chevron-down expand-icon"></i>
+        </div>
+      </div>
+      <div class="card-body">
+        <!-- bio data form (same structure but different fields maybe) -->
+        <form class="bio-form" id="transferForm">
+          <div class="input-group">
+            <label><i class="fas fa-user"></i> Name</label>
+            <input type="text" placeholder="Recipient full name" id="recName" autocomplete="off">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-map-pin"></i> Address</label>
+            <input type="text" placeholder="Recipient address" id="recAddress" autocomplete="off">
+          </div>
+          <div class="input-group">
+            <label><i class="fas fa-coins"></i> Amount of Coins</label>
+            <input type="number" placeholder="0.00" id="recCoins" step="any" min="0" value="124.50">
+          </div>
+        </form>
+
+        <!-- certificate agreement box (same but optional) -->
+        <div class="checkbox-group" id="agreeTransferBox">
+          <input type="checkbox" id="agreeTransferCheck">
+          <label for="agreeTransferCheck">
+            <i class="fas fa-file-signature"></i> I agree to pay certificate fee for this transfer
+          </label>
+        </div>
+
+        <button class="pay-btn" id="transferButton">
+          <i class="fas fa-paper-plane"></i> Confirm Transfer
+        </button>
+        <div class="card-footer">
+          <i class="fas fa-clock"></i> instant liquid settlement
+        </div>
+      </div>
+    </div>
+
+    <!-- tiny note -->
+    <div class="legal-note">
+      <i class="fas fa-droplet"></i> tap any card to expand · liquid theme
+    </div>
+  </div>
+
+  <script>
+    (function() {
+      // ----- EXPAND/COLLAPSE CARDS ON CLICK -----
+      const cards = document.querySelectorAll('.card');
+
+      cards.forEach(card => {
+        const header = card.querySelector('.card-header');
+
+        // toggle expansion when header is clicked
+        header.addEventListener('click', (e) => {
+          // don't toggle if clicking on form elements inside (not needed since header only)
+          // but if we have clickable things inside header? no. So it's fine.
+          // close other cards? we allow multiple open, but maybe keep independent. For liquid feel, we can close others.
+          // to keep it simple, we just toggle the clicked card. but we might want to close others for better UX.
+          // I'll implement: if it's not expanded, expand it and close others. if expanded, collapse.
+          const isExpanded = card.classList.contains('expanded');
+          
+          // close all cards first (remove expanded)
+          cards.forEach(c => c.classList.remove('expanded'));
+
+          // if the clicked card was not expanded, expand it
+          if (!isExpanded) {
+            card.classList.add('expanded');
+          }
+          // if it was expanded, we already removed it (so it collapses)
+        });
+
+        // prevent toggling when clicking inside card-body (forms, buttons)
+        const body = card.querySelector('.card-body');
+        body.addEventListener('click', (e) => {
+          e.stopPropagation();  // avoid triggering the header click
+        });
+
+        // Also stop propagation on checkbox group and pay button (they are inside body but safe)
+      });
+
+      // ----- BIO DATA FORM: UPDATE AMOUNT DISPLAY + VALIDATION + "PAY" INTERACTION -----
+      const card1 = document.getElementById('card1');
+      const card1AmountSpan = card1.querySelector('.amount');
+      const coinsInput = document.getElementById('coins');
+      const fullNameInput = document.getElementById('fullName');
+      const addressInput = document.getElementById('address');
+      const agreeCheck = document.getElementById('agreeCheck');
+      const payButton = document.getElementById('payButton');
+
+      // update amount display for card1 when coins change
+      coinsInput.addEventListener('input', function() {
+        let val = parseFloat(this.value);
+        if (isNaN(val) || val < 0) val = 0;
+        card1AmountSpan.textContent = '$ ' + val.toFixed(2);
+      });
+
+      // Pay button action for card1
+      payButton.addEventListener('click', function(e) {
+        e.preventDefault();
+        
+        // simple liquid validation
+        const name = fullNameInput.value.trim();
+        const address = addressInput.value.trim();
+        const coins = parseFloat(coinsInput.value) || 0;
+        const agreed = agreeCheck.checked;
+
+        if (!name) {
+          alert('🌊 Please enter your full name.');
+          return;
+        }
+        if (!address) {
+          alert('🌊 Please enter your address.');
+          return;
+        }
+        if (coins <= 0) {
+          alert('🌊 Please enter a valid coin amount.');
+          return;
+        }
+        if (!agreed) {
+          alert('🌊 You must agree to make payment for the certificate.');
+          return;
+        }
+
+        // success message (liquid style)
+        alert(`✅ Payment successful!\n\nName: ${name}\nAddress: ${address}\nCoins: ${coins.toFixed(2)}\nCertificate payment agreed.\n\nYour certificate is being generated.`);
+        
+        // optionally reset form (keeps amount display consistent)
+        // we don't reset to avoid annoyance, but can reset checkbox? leave as is.
+        // but for demo, let's keep values.
+      });
+
+      // ----- CARD 2 (Transfer) -----
+      const card2 = document.getElementById('card2');
+      const card2AmountSpan = card2.querySelector('.amount');
+      const recCoins = document.getElementById('recCoins');
+      const recName = document.getElementById('recName');
+      const recAddress = document.getElementById('recAddress');
+      const agreeTransferCheck = document.getElementById('agreeTransferCheck');
+      const transferButton = document.getElementById('transferButton');
+
+      // init transfer amount display with default 124.50
+      recCoins.addEventListener('input', function() {
+        let val = parseFloat(this.value);
+        if (isNaN(val) || val < 0) val = 0;
+        card2AmountSpan.textContent = '$ ' + val.toFixed(2);
+      });
+
+      transferButton.addEventListener('click', function(e) {
+        e.preventDefault();
+
+        const name = recName.value.trim();
+        const address = recAddress.value.trim();
+        const coins = parseFloat(recCoins.value) || 0;
+        const agreed = agreeTransferCheck.checked;
+
+        if (!name) {
+          alert('🌊 Please enter recipient name.');
+          return;
+        }
+        if (!address) {
+          alert('🌊 Please enter recipient address.');
+          return;
+        }
+        if (coins <= 0) {
+          alert('🌊 Please enter a valid coin amount.');
+          return;
+        }
+        if (!agreed) {
+          alert('🌊 You must agree to pay the certificate fee for this transfer.');
+          return;
+        }
+
+        alert(`✅ Transfer confirmed!\n\nRecipient: ${name}\nAddress: ${address}\nCoins: ${coins.toFixed(2)}\nCertificate fee agreed.`);
+      });
+
+      // update card2 amount from default (set initial)
+      card2AmountSpan.textContent = '$ ' + (parseFloat(recCoins.value) || 0).toFixed(2);
+
+      // also sync amount if card1 is updated? already done.
+
+      // Edge: input type number, prevent negative manually
+      [coinsInput, recCoins].forEach(inp => {
+        inp.addEventListener('change', function() {
+          if (this.value < 0) this.value = 0;
+          // trigger input to update display
+          this.dispatchEvent(new Event('input'));
+        });
+      });
+
+      // For better liquid feel: when clicking on the checkbox-group label or box, 
+      // ensure the checkbox toggles properly. Default behavior works.
+      // But we also need to stop propagation for checkbox clicks from toggling card? 
+      // The card-body click stop propagation already handles it.
+    })();
+  </script>
+</body>
+  </html>
